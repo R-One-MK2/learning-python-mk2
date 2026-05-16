@@ -6,3 +6,16 @@ services:
     container_name: redis
     ports:
       - "6379:6379"
+
+  worker:
+    build: .
+    container_name: celery-worker
+    working_dir: /app
+    volumes:
+      - .:/app
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+    command: >
+      celery -A app.worker.celery_app worker --loglevel=info --pool=solo
+    depends_on:
+      - redis

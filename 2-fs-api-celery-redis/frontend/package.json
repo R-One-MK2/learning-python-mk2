@@ -1,5 +1,6 @@
 {
   "name": "frontend",
+  "description": "Full-stack API with File System evaluation using Celery and Redis",
   "version": "0.1.0",
   "private": true,
   "scripts": {

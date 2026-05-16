@@ -12,6 +12,11 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d tasks_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:7
@@ -27,26 +32,15 @@ services:
       - .:/app
     environment:
       - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=postgresql+psycopg://user:password@postgres:5432/tasks_db
     command: >
       celery -A app.worker.celery_app worker --loglevel=info --pool=solo
     depends_on:
-      - redis
+      redis:
+        condition: service_started
+      postgres:
+        condition: service_healthy
 
-  api:
-    build: .
-    container_name: fastapi-server
-    working_dir: /app
-    volumes:
-      - .:/app
-    ports:
-      - "8000:8000"
-    environment:
-      - REDIS_URL=redis://redis:6379/0
-      - DATABASE_URL=postgresql://user:password@postgres:5432/tasks_db
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-    depends_on:
-      - redis
-      - postgres
-
+  
 volumes:
   postgres_data:      

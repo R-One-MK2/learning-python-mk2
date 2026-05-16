@@ -8,12 +8,17 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Mapped, mapped_column, sessionmaker
 
 # 1. Get Database URL from environment
+# Use psycopg3 (sync) - installed as psycopg[binary] in dependencies
+# The +psycopg part explicitly tells SQLAlchemy to use psycopg3 driver
 DATABASE_URL = os.getenv(
-    "DATABASE_URL", "postgresql://user:password@localhost:5432/tasks_db"
+    "DATABASE_URL",
+    "postgresql+psycopg://user:password@localhost:5432/tasks_db",
 )
 
+print(f"[DEBUG] Using DATABASE_URL: {DATABASE_URL}")
+
 # 2. Create Engine (Connection Pool)
-engine = create_engine(DATABASE_URL)
+engine = create_engine(DATABASE_URL, echo=False, pool_pre_ping=True)
 
 # 3. Create Session Factory
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

@@ -14,3 +14,9 @@ celery_app.conf.update(
     timezone="UTC",
     enable_utc=True,
 )
+
+# # Import tasks to register them with the Celery app
+# from . import tasks  # noqa: E402, F401
+
+# Automatically discover and load tasks from the app module
+celery_app.autodiscover_tasks(["app"])

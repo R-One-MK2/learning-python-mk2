@@ -13,9 +13,13 @@ router = APIRouter(prefix="/api", tags=["setup"])
 class SetupRequest(BaseModel):
     name: str
     description: str = ""  # Optional
+    tags: List[str] = []  # Optional tags
     modelVersion: str
     apiToken: str
     testingEndpointUrl: str
+    testRatio: str  # small, medium, large
+    judges: List[str]  # Selected judge frameworks
+    pillars: List[str]  # Selected evaluation pillars
 
 
 class SetupResponse(BaseModel):
@@ -38,6 +42,10 @@ class SetupConfig(BaseModel):
     modelVersion: str
     apiToken: str
     testingEndpointUrl: str
+    testRatio: str
+    judges: List[str]
+    pillars: List[str]
+    tags: List[str] = []
 
 
 class JobResponse(BaseModel):
@@ -63,6 +71,10 @@ JOBS = [
             "modelVersion": "gpt-4",
             "apiToken": "sk-abc123***",
             "testingEndpointUrl": "https://api.openai.com/v1",
+            "testRatio": "medium",
+            "judges": ["laaj", "moonshot"],
+            "pillars": ["Transparency", "Safety", "Fairness"],
+            "tags": ["production", "q4-testing"],
         },
     },
     {
@@ -76,6 +88,10 @@ JOBS = [
             "modelVersion": "gpt-3.5-turbo",
             "apiToken": "sk-def456***",
             "testingEndpointUrl": "https://api.openai.com/v1",
+            "testRatio": "small",
+            "judges": ["aidx"],
+            "pillars": ["Robustness", "Security"],
+            "tags": ["testing"],
         },
     },
     {
@@ -89,6 +105,10 @@ JOBS = [
             "modelVersion": "claude-3",
             "apiToken": "sk-ghi789***",
             "testingEndpointUrl": "https://api.anthropic.com/v1",
+            "testRatio": "large",
+            "judges": ["laaj", "moonshot", "aidx"],
+            "pillars": ["Transparency", "Explainability", "Safety", "Fairness"],
+            "tags": [],
         },
     },
     {
@@ -102,6 +122,10 @@ JOBS = [
             "modelVersion": "gpt-4-turbo",
             "apiToken": "sk-jkl012***",
             "testingEndpointUrl": "https://api.openai.com/v1",
+            "testRatio": "medium",
+            "judges": ["moonshot"],
+            "pillars": ["Accountability", "Human Agency & Oversight"],
+            "tags": ["high-priority"],
         },
     },
 ]
@@ -122,9 +146,13 @@ async def create_setup(data: SetupRequest):
     print("📥 Received setup:")
     print(f"   Name: {data.name}")
     print(f"   Description: {data.description}")
+    print(f"   Tags: {data.tags}")
     print(f"   Model Version: {data.modelVersion}")
     print(f"   API Token: {data.apiToken}")
     print(f"   Testing Endpoint URL: {data.testingEndpointUrl}")
+    print(f"   Test Ratio: {data.testRatio}")
+    print(f"   Judges: {data.judges}")
+    print(f"   Pillars: {data.pillars}")
 
     # Create new job with setup details
     new_job = {
@@ -138,6 +166,10 @@ async def create_setup(data: SetupRequest):
             "modelVersion": data.modelVersion,
             "apiToken": data.apiToken,
             "testingEndpointUrl": data.testingEndpointUrl,
+            "testRatio": data.testRatio,
+            "judges": data.judges,
+            "pillars": data.pillars,
+            "tags": data.tags,
         },
     }
 

@@ -1,4 +1,5 @@
 "use client";
+import { useState, useEffect } from "react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -7,10 +8,10 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { getJobs } from "@/lib/api";
 import {
   Table,
   TableBody,
@@ -20,10 +21,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-const oneHourAgo = new Date(new Date().getTime() - 3600000).toISOString();
-const thirtyMinutesAgo = new Date(new Date().getTime() - 1800000).toISOString();
-const tenMinutesAgo = new Date(new Date().getTime() - 600000).toISOString();
-
 interface Job {
   id: string;
   name: string;
@@ -31,6 +28,15 @@ interface Job {
   status: "pending" | "processing" | "completed" | "failed";
   createdAt: string;
   progress: number;
+  setup: {
+    modelVersion: string;
+    apiToken: string;
+    testingEndpointUrl: string;
+    testRatio: string;
+    judges: string[];
+    pillars: string[];
+    tags: string[];
+  };
 }
 
 // Helper functions
@@ -175,14 +181,7 @@ const CompletedJobsTable = ({ jobs }: CompletedJobsTableProps) => {
                 key={job.id}
                 className="cursor-pointer hover:bg-gray-50"
                 onClick={() => {
-                  const params = new URLSearchParams({
-                    name: job.name,
-                    description: job.description,
-                    status: job.status,
-                    progress: String(job.progress),
-                    createdAt: job.createdAt,
-                  });
-                  router.push(`/platform/jobs/${job.id}?${params.toString()}`);
+                  router.push(`/platform/jobs/${job.id}`);
                 }}
               >
                 <TableCell className="font-medium">{job.name}</TableCell>
@@ -224,32 +223,47 @@ const JobsEmptyState = () => (
 );
 
 export default function JobsPage() {
-  const [jobs] = useState<Job[]>([
-    {
-      id: "job_abc12345",
-      name: "G4 Stress Test For SN A",
-      description: "Sample test for Dim A",
-      status: "completed",
-      createdAt: oneHourAgo,
-      progress: 100,
-    },
-    {
-      id: "job_def67890",
-      name: "API Evaluation Run",
-      description: "Testing endpoint performance",
-      status: "processing",
-      createdAt: thirtyMinutesAgo,
-      progress: 65,
-    },
-    {
-      id: "job_ghi11111",
-      name: "Model Comparison",
-      description: "Comparing multiple models",
-      status: "pending",
-      createdAt: tenMinutesAgo,
-      progress: 0,
-    },
-  ]);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        setLoading(true);
+        const data = await getJobs();
+        setJobs(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load jobs");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchJobs();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="container mx-auto max-w-6xl py-12">
+        <JobBreadcrumb />
+        <JobsHeader />
+        <div className="text-center text-gray-500">Loading jobs...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto max-w-6xl py-12">
+        <JobBreadcrumb />
+        <JobsHeader />
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">
+          Error loading jobs: {error}
+        </div>
+      </div>
+    );
+  }
 
   // Separate running and completed jobs
   const runningJobs = jobs.filter((job) =>

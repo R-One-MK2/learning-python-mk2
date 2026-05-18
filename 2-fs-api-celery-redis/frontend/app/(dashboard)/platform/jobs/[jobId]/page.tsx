@@ -1,10 +1,23 @@
+/**
+ * Job Details Page
+ *
+ * Displays comprehensive information about a single job including:
+ * - Current status and progress tracking
+ * - Evaluation configuration (model, judges, pillars, test ratio)
+ * - Job metadata (name, description, creation date)
+ * - Navigation links and action buttons
+ *
+ * Data is fetched directly from the backend API via job ID from URL params.
+ */
+
 "use client";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { use } from "react";
-import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { getJob } from "@/lib/api";
+import type { Job } from "@/lib/api";
 
 import {
   Breadcrumb,
@@ -21,20 +34,36 @@ interface JobDetailsPageProps {
   }>;
 }
 
-// Helper functions
+/**
+ * Get Tailwind CSS classes for job status badge background/text color
+ * @param status - Job status (pending, processing, completed, failed)
+ * @returns Tailwind class string for styling
+ */
 const getStatusColor = (status: string) => {
   if (status === "completed") return "bg-green-100 text-green-800";
   if (status === "processing") return "bg-blue-100 text-blue-800";
   return "bg-yellow-100 text-yellow-800";
 };
 
+/**
+ * Get emoji icon representing job status
+ * @param status - Job status
+ * @returns Emoji string for visual representation
+ */
 const getStatusIcon = (status: string) => {
   if (status === "completed") return "✅";
   if (status === "processing") return "🟡";
   return "⏳";
 };
 
-// Components
+// ============================================================================
+// UI COMPONENTS
+// ============================================================================
+
+/**
+ * Breadcrumb navigation showing: Setup > Jobs > [JobId]
+ * Provides quick navigation back to setup or jobs list
+ */
 interface BreadcrumbSectionProps {
   jobId: string;
 }
@@ -57,6 +86,9 @@ const BreadcrumbSection = ({ jobId }: BreadcrumbSectionProps) => (
   </Breadcrumb>
 );
 
+/**
+ * Header section with job title and ID
+ */
 interface JobHeaderProps {
   jobId: string;
   name?: string;
@@ -69,6 +101,10 @@ const JobHeader = ({ jobId, name }: JobHeaderProps) => (
   </div>
 );
 
+/**
+ * Status card showing current job status and progress bar
+ * Progress bar is only shown for non-completed jobs
+ */
 interface StatusCardProps {
   status: string;
   progress: number;
@@ -109,6 +145,7 @@ interface JobInfoCardProps {
   name?: string;
   description?: string;
   createdAt?: string;
+  modelVersion?: string;
 }
 
 const JobInfoCard = ({
@@ -117,6 +154,7 @@ const JobInfoCard = ({
   name,
   description,
   createdAt,
+  modelVersion,
 }: JobInfoCardProps) => (
   <div className="mb-6 rounded-lg border border-gray-200 p-6">
     <h3 className="mb-4 text-lg font-semibold">Job Information</h3>
@@ -149,6 +187,12 @@ const JobInfoCard = ({
         <span className="text-gray-600">Status:</span>
         <span className="capitalize">{status}</span>
       </div>
+      {modelVersion && (
+        <div className="flex justify-between">
+          <span className="text-gray-600">Model Version:</span>
+          <span>{modelVersion}</span>
+        </div>
+      )}
     </div>
   </div>
 );
@@ -164,6 +208,104 @@ const ActionsSection = () => (
   </div>
 );
 
+interface EvaluationParametersProps {
+  setup?: {
+    modelVersion: string;
+    testRatio: string;
+    judges: string[];
+    pillars: string[];
+    tags: string[];
+  };
+}
+
+const EvaluationParametersSection = ({ setup }: EvaluationParametersProps) => {
+  if (!setup) return null;
+
+  const hasData =
+    setup.modelVersion ||
+    setup.testRatio ||
+    setup.judges.length > 0 ||
+    setup.pillars.length > 0 ||
+    setup.tags.length > 0;
+
+  if (!hasData) return null;
+
+  return (
+    <div className="mb-6 rounded-lg border border-gray-200 p-6">
+      <h3 className="mb-4 text-lg font-semibold">Evaluation Parameters</h3>
+      <div className="space-y-4">
+        {setup.modelVersion && (
+          <div>
+            <span className="text-sm font-medium text-gray-600">
+              Model Version:
+            </span>
+            <p className="mt-1 text-sm">{setup.modelVersion}</p>
+          </div>
+        )}
+
+        {setup.testRatio && (
+          <div>
+            <span className="text-sm font-medium text-gray-600">
+              Test Ratio:
+            </span>
+            <p className="mt-1 text-sm capitalize">{setup.testRatio}</p>
+          </div>
+        )}
+
+        {setup.judges.length > 0 && (
+          <div>
+            <span className="text-sm font-medium text-gray-600">
+              Judge Frameworks:
+            </span>
+            <div className="mt-1 flex flex-wrap gap-2">
+              {setup.judges.map((judge) => (
+                <span
+                  key={judge}
+                  className="inline-block rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-800"
+                >
+                  {judge}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {setup.tags.length > 0 && (
+          <div>
+            <span className="text-sm font-medium text-gray-600">Tags:</span>
+            <div className="mt-1 flex flex-wrap gap-2">
+              {setup.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="inline-block rounded-full bg-gray-200 px-3 py-1 text-xs font-medium text-gray-800"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {setup.pillars.length > 0 && (
+          <div>
+            <span className="text-sm font-medium text-gray-600">
+              Evaluation Pillars:
+            </span>
+            <div className="mt-2 flex-1">
+              {setup.pillars.map((pillar) => (
+                <div key={pillar} className="flex items-center gap-2">
+                  <span className="text-green-600">✓</span>
+                  <span className="text-sm">{pillar}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const ResultsSection = () => (
   <div className="mt-6 rounded-lg border border-green-200 bg-green-50 p-6">
     <h3 className="mb-2 text-lg font-semibold text-green-900">
@@ -178,24 +320,34 @@ const ResultsSection = () => (
 
 export default function JobDetailsPage({ params }: JobDetailsPageProps) {
   const { jobId } = use(params);
-  const searchParams = useSearchParams();
+  const [job, setJob] = useState<Job | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState(0);
 
-  const name = searchParams.get("name") || "Job";
-  const description = searchParams.get("description") || "No description";
-  const initialStatus = searchParams.get("status") || "processing";
-  const initialProgress = parseInt(searchParams.get("progress") || "0");
-  const createdAt = searchParams.get("createdAt") || new Date().toISOString();
+  useEffect(() => {
+    const fetchJob = async () => {
+      try {
+        setLoading(true);
+        const data = await getJob(jobId);
+        setJob(data);
+        setProgress(data.progress);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load job");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const [status, setStatus] = useState(initialStatus);
-  const [progress, setProgress] = useState(initialProgress);
+    fetchJob();
+  }, [jobId]);
 
   useEffect(() => {
     // Only simulate progress if not already completed/failed
-    if (initialStatus !== "completed" && initialStatus !== "failed") {
+    if (job && job.status !== "completed" && job.status !== "failed") {
       const interval = setInterval(() => {
         setProgress((prev) => {
           if (prev >= 100) {
-            setStatus("completed");
             return 100;
           }
           return prev + 10;
@@ -204,22 +356,42 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
 
       return () => clearInterval(interval);
     }
-  }, [initialStatus]);
+  }, [job]);
+
+  if (loading) {
+    return (
+      <div className="container mx-auto max-w-6xl py-12">
+        <div className="text-center text-gray-500">Loading job details...</div>
+      </div>
+    );
+  }
+
+  if (error || !job) {
+    return (
+      <div className="container mx-auto max-w-6xl py-12">
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">
+          Error loading job: {error}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto max-w-6xl py-12">
       <BreadcrumbSection jobId={jobId} />
-      <JobHeader jobId={jobId} name={name} />
-      <StatusCard status={status} progress={progress} />
+      <JobHeader jobId={jobId} name={job.name} />
+      <StatusCard status={job.status} progress={progress} />
       <JobInfoCard
         jobId={jobId}
-        status={status}
-        name={name}
-        description={description}
-        createdAt={createdAt}
+        status={job.status}
+        name={job.name}
+        description={job.description}
+        createdAt={job.createdAt}
+        modelVersion={job.setup?.modelVersion}
       />
+      <EvaluationParametersSection setup={job.setup} />
       <ActionsSection />
-      {status === "completed" && <ResultsSection />}
+      {job.status === "completed" && <ResultsSection />}
     </div>
   );
 }

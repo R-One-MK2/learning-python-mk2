@@ -1,0 +1,42 @@
+from fastapi import APIRouter
+from pydantic import BaseModel
+
+router = APIRouter(prefix="/api", tags=["setup"])
+
+
+# Data models
+class SetupRequest(BaseModel):
+    name: str
+    description: str = ""  # Optional
+
+
+class SetupResponse(BaseModel):
+    status: str
+    message: str
+    id: str
+
+
+# Endpoints
+@router.post("/setup", response_model=SetupResponse)
+async def create_setup(data: SetupRequest):
+    """
+    Receive setup configuration from frontend
+
+    Later: Save to DB and publish to Redis queue
+    """
+    print("📥 Received setup:")
+    print(f"   Name: {data.name}")
+    print(f"   Description: {data.description}")
+
+    # For now, just echo back
+    return SetupResponse(
+        status="ok",
+        message=f"Setup '{data.name}' received!",
+        id="setup_001",  # TODO: Generate real ID from DB
+    )
+
+
+@router.get("/health")
+async def health():
+    """Health check"""
+    return {"status": "healthy"}

@@ -5,6 +5,14 @@ import Link from "next/link";
 import { use } from "react";
 import { Button } from "@/components/ui/button";
 
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 interface JobDetailsPageProps {
   params: Promise<{
     jobId: string;
@@ -45,6 +53,22 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
 
   return (
     <div className="container mx-auto max-w-2xl py-12">
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/platform/jobs">Setup</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/platform/jobs">Jobs</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>{jobId}</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold">Job Details</h1>
@@ -87,7 +111,7 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600">Created:</span>
-            <span>{new Date().toLocaleString()}</span>
+            <span suppressHydrationWarning>{new Date().toLocaleString()}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600">Status:</span>

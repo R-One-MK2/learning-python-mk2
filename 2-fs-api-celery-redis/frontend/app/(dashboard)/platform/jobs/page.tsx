@@ -1,6 +1,13 @@
 "use client";
-
-import { useState, useEffect } from "react";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -93,6 +100,18 @@ export default function JobsPage() {
 
   return (
     <div className="container mx-auto max-w-6xl py-12">
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/platform/setup">Setup</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Jobs</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
       {/* Header */}
       <div className="mb-8 flex items-center justify-between">
         <div>
@@ -145,7 +164,9 @@ export default function JobsPage() {
                   {/* Metadata */}
                   <div className="flex items-center justify-between text-xs text-gray-500">
                     <span>ID: {job.id}</span>
-                    <span>{new Date(job.createdAt).toLocaleString()}</span>
+                    <span suppressHydrationWarning>
+                      {new Date(job.createdAt).toLocaleString()}
+                    </span>
                   </div>
                 </div>
               </Link>
@@ -189,7 +210,10 @@ export default function JobsPage() {
                         {getStatusIcon(job.status)} {job.status}
                       </span>
                     </TableCell>
-                    <TableCell className="text-sm text-gray-500">
+                    <TableCell
+                      className="text-sm text-gray-500"
+                      suppressHydrationWarning
+                    >
                       {new Date(job.createdAt).toLocaleString()}
                     </TableCell>
                     <TableCell className="text-right font-mono text-xs text-gray-500">

@@ -13,6 +13,70 @@ import {
 } from "@/components/ui/field";
 import { submitSetup, SubmitSetupInput } from "@/lib/api";
 
+interface SetupProps {
+  name: string;
+  description: string;
+  loading: boolean;
+  message: string;
+  setName: (value: string) => void;
+  setDescription: (value: string) => void;
+}
+
+const Setup = ({
+  name,
+  description,
+  loading,
+  message,
+  setName,
+  setDescription,
+}: SetupProps) => {
+  return (
+    <div>
+      <FieldGroup>
+        <FieldSet>
+          <FieldDescription>
+            Identify and Tag this evaluation run
+          </FieldDescription>
+          <Field>
+            <FieldLabel htmlFor="setup-name">
+              Name of the evalution run
+            </FieldLabel>
+            <Input
+              id="setup-name"
+              placeholder="G4 Stress Test For SN A"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </Field>
+        </FieldSet>
+
+        {/* Description */}
+        <Field>
+          <FieldLabel htmlFor="setup-description">Description</FieldLabel>
+          <Textarea
+            id="setup-description"
+            placeholder="Sample test for Dim A"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            required
+          />
+          <FieldDescription>A summary of the test run</FieldDescription>
+        </Field>
+        {message && <p className="text-sm">{message}</p>}
+
+        <Button type="submit" disabled={loading}>
+          {loading ? "Submitting..." : "Submit"}
+        </Button>
+      </FieldGroup>
+    </div>
+  );
+};
+
+const EndpointSelection = () => {
+  return <>Endpoint Selection</>;
+};
+
 const SetupForm = () => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -43,39 +107,16 @@ const SetupForm = () => {
 
   return (
     <form onSubmit={handleSubmit} className="w-1/2 space-y-6">
-      <FieldGroup>
-        <FieldSet>
-          <FieldLabel htmlFor="setup-name">Name</FieldLabel>
-          <FieldDescription>Name of the evaluation run</FieldDescription>
-          <Field>
-            <Input
-              id="setup-name"
-              placeholder="G4 Stress Test For SN A"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-          </Field>
-        </FieldSet>
+      <Setup
+        name={name}
+        description={description}
+        message={message}
+        loading={loading}
+        setDescription={setDescription}
+        setName={setName}
+      />
 
-        {/* Description */}
-        <Field>
-          <FieldLabel htmlFor="setup-description">Description</FieldLabel>
-          <Textarea
-            id="setup-description"
-            placeholder="Sample test for Dim A"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            required
-          />
-          <FieldDescription>A summary of the test run</FieldDescription>
-        </Field>
-        {message && <p className="text-sm">{message}</p>}
-
-        <Button type="submit" disabled={loading}>
-          {loading ? "Submitting..." : "Submit"}
-        </Button>
-      </FieldGroup>
+      <EndpointSelection />
     </form>
   );
 };

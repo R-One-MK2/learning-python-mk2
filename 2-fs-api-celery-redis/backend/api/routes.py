@@ -8,6 +8,9 @@ router = APIRouter(prefix="/api", tags=["setup"])
 class SetupRequest(BaseModel):
     name: str
     description: str = ""  # Optional
+    modelVersion: str
+    apiToken: str
+    testingEndpointUrl: str
 
 
 class SetupResponse(BaseModel):
@@ -27,6 +30,9 @@ async def create_setup(data: SetupRequest):
     print("📥 Received setup:")
     print(f"   Name: {data.name}")
     print(f"   Description: {data.description}")
+    print(f"   Model Version: {data.modelVersion}")
+    print(f"   API Token: {data.apiToken}")
+    print(f"   Testing Endpoint URL: {data.testingEndpointUrl}")
 
     # For now, just echo back
     return SetupResponse(

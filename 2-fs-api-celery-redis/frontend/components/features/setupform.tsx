@@ -11,6 +11,13 @@ import {
   FieldLabel,
   FieldSet,
 } from "@/components/ui/field";
+import {
+  Select,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+} from "@/components/ui/select";
 import { submitSetup, SubmitSetupInput } from "@/lib/api";
 
 interface SetupProps {
@@ -32,6 +39,7 @@ const Setup = ({
 }: SetupProps) => {
   return (
     <div>
+      <h1 className="mb-2 text-3xl font-bold">Setup</h1>
       <FieldGroup>
         <FieldSet>
           <FieldDescription>
@@ -63,23 +71,109 @@ const Setup = ({
           />
           <FieldDescription>A summary of the test run</FieldDescription>
         </Field>
-        {message && <p className="text-sm">{message}</p>}
-
-        <Button type="submit" disabled={loading}>
-          {loading ? "Submitting..." : "Submit"}
-        </Button>
       </FieldGroup>
     </div>
   );
 };
 
-const EndpointSelection = () => {
-  return <>Endpoint Selection</>;
+interface EndpointSelectionProps {
+  modelVersion: string;
+  apiToken: string;
+  testingEndpointUrl: string;
+  setModelVersion: (value: string) => void;
+  setApiToken: (value: string) => void;
+  setTestingEndpointUrl: (value: string) => void;
+}
+
+// Model versions available
+const MODEL_VERSIONS = [
+  "OpenAI GPT-4o",
+  "OpenAI GPT-4",
+  "OpenAI GPT-3.5-turbo",
+  "Anthropic Claude-3",
+  "Google Gemini",
+  "Meta Llama-2",
+];
+
+const EndpointSelection = ({
+  modelVersion,
+  apiToken,
+  testingEndpointUrl,
+  setApiToken,
+  setModelVersion,
+  setTestingEndpointUrl,
+}: EndpointSelectionProps) => {
+  return (
+    <div>
+      <h1 className="mb-2 text-3xl font-bold">Setup</h1>
+      <FieldGroup>
+        <FieldSet>
+          <FieldDescription>
+            Configure the model and access credentials to test against.
+          </FieldDescription>
+          <FieldLabel>Endpoint Selection</FieldLabel>
+
+          {/* Model Version Dropdown */}
+          <Field>
+            <FieldLabel htmlFor="model-version">Model Version</FieldLabel>
+            <Select value={modelVersion} onValueChange={setModelVersion}>
+              <SelectTrigger id="model-version">
+                <SelectValue placeholder="Select a model" />
+              </SelectTrigger>
+              <SelectContent>
+                {MODEL_VERSIONS.map((model) => (
+                  <SelectItem key={model} value={model}>
+                    {model}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FieldDescription>
+              Select the model from the dropdown.
+            </FieldDescription>
+          </Field>
+
+          {/* API Token */}
+          <Field>
+            <FieldLabel htmlFor="api-token">API Token</FieldLabel>
+            <Input
+              id="api-token"
+              type="password"
+              placeholder="••••••••••••••••"
+              value={apiToken}
+              onChange={(e) => setApiToken(e.target.value)}
+              required
+            />
+            <FieldDescription>
+              API token or access token for authentication.
+            </FieldDescription>
+          </Field>
+
+          {/* Testing Endpoint URL */}
+          <Field>
+            <FieldLabel htmlFor="testing-url">Testing Endpoint URL</FieldLabel>
+            <Input
+              id="testing-url"
+              type="url"
+              placeholder="https://api.example.com"
+              value={testingEndpointUrl}
+              onChange={(e) => setTestingEndpointUrl(e.target.value)}
+              required
+            />
+            <FieldDescription>The endpoint to be tested.</FieldDescription>
+          </Field>
+        </FieldSet>
+      </FieldGroup>
+    </div>
+  );
 };
 
 const SetupForm = () => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [modelVersion, setModelVersion] = useState("");
+  const [apiToken, setApiToken] = useState("");
+  const [testingEndpointUrl, setTestingEndpointUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -90,7 +184,13 @@ const SetupForm = () => {
 
     try {
       // Call the API function
-      const response = await submitSetup({ name, description });
+      const response = await submitSetup({
+        name,
+        description,
+        modelVersion,
+        apiToken,
+        testingEndpointUrl,
+      });
       console.log("Response:", response);
 
       setMessage("✅ Success!");
@@ -116,7 +216,20 @@ const SetupForm = () => {
         setName={setName}
       />
 
-      <EndpointSelection />
+      <EndpointSelection
+        modelVersion={modelVersion}
+        setModelVersion={setModelVersion}
+        apiToken={apiToken}
+        setApiToken={setApiToken}
+        testingEndpointUrl={testingEndpointUrl}
+        setTestingEndpointUrl={setTestingEndpointUrl}
+      />
+
+      {message && <p className="text-sm">{message}</p>}
+
+      <Button type="submit" disabled={loading}>
+        {loading ? "Submitting..." : "Submit"}
+      </Button>
     </form>
   );
 };

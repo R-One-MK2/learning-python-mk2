@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useRouter } from "next/navigation";
 import {
   Field,
   FieldDescription,
@@ -169,6 +170,7 @@ const EndpointSelection = ({
 };
 
 const SetupForm = () => {
+  const router = useRouter();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [modelVersion, setModelVersion] = useState("");
@@ -193,8 +195,10 @@ const SetupForm = () => {
       });
       console.log("Response:", response);
 
-      setMessage("✅ Success!");
-      setName("");
+      // setMessage("✅ Success!");
+      // setName("");
+
+      router.push(`/platform/jobs/${response.job_id}`);
     } catch (error) {
       setMessage(
         "❌ Error: " +

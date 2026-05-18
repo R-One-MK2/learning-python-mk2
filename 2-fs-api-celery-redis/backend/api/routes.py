@@ -1,3 +1,5 @@
+import uuid
+
 from fastapi import APIRouter
 from pydantic import BaseModel
 
@@ -16,7 +18,7 @@ class SetupRequest(BaseModel):
 class SetupResponse(BaseModel):
     status: str
     message: str
-    id: str
+    job_id: str
 
 
 # Endpoints
@@ -27,6 +29,10 @@ async def create_setup(data: SetupRequest):
 
     Later: Save to DB and publish to Redis queue
     """
+
+    # Generate unique job ID
+    job_id = f"job_{uuid.uuid4().hex[:8]}"
+
     print("📥 Received setup:")
     print(f"   Name: {data.name}")
     print(f"   Description: {data.description}")
@@ -38,7 +44,7 @@ async def create_setup(data: SetupRequest):
     return SetupResponse(
         status="ok",
         message=f"Setup '{data.name}' received!",
-        id="setup_001",  # TODO: Generate real ID from DB
+        job_id=job_id,  # ← NEW: Return the job ID
     )
 
 

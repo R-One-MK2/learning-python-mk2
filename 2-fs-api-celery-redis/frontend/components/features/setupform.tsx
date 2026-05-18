@@ -198,7 +198,8 @@ const SetupForm = () => {
       // setMessage("✅ Success!");
       // setName("");
 
-      router.push(`/platform/jobs/${response.job_id}`);
+      router.push(`/platform/jobs`);
+      // router.push(`/platform/jobs/${response.job_id}`);
     } catch (error) {
       setMessage(
         "❌ Error: " +

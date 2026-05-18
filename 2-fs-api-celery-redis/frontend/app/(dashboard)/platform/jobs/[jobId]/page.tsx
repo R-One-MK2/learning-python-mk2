@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { use } from "react";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
 import {
@@ -58,11 +59,12 @@ const BreadcrumbSection = ({ jobId }: BreadcrumbSectionProps) => (
 
 interface JobHeaderProps {
   jobId: string;
+  name?: string;
 }
 
-const JobHeader = ({ jobId }: JobHeaderProps) => (
+const JobHeader = ({ jobId, name }: JobHeaderProps) => (
   <div className="mb-8">
-    <h1 className="text-4xl font-bold">Job Details</h1>
+    <h1 className="text-4xl font-bold">{name || "Job Details"}</h1>
     <p className="mt-2 text-gray-600">ID: {jobId}</p>
   </div>
 );
@@ -104,19 +106,44 @@ const StatusCard = ({ status, progress }: StatusCardProps) => (
 interface JobInfoCardProps {
   jobId: string;
   status: string;
+  name?: string;
+  description?: string;
+  createdAt?: string;
 }
 
-const JobInfoCard = ({ jobId, status }: JobInfoCardProps) => (
+const JobInfoCard = ({
+  jobId,
+  status,
+  name,
+  description,
+  createdAt,
+}: JobInfoCardProps) => (
   <div className="mb-6 rounded-lg border border-gray-200 p-6">
     <h3 className="mb-4 text-lg font-semibold">Job Information</h3>
-    <div className="space-y-2 text-sm">
+    <div className="space-y-3 text-sm">
+      {name && (
+        <div className="flex justify-between">
+          <span className="text-gray-600">Name:</span>
+          <span className="font-medium">{name}</span>
+        </div>
+      )}
+      {description && (
+        <div className="flex justify-between">
+          <span className="text-gray-600">Description:</span>
+          <span className="text-gray-700">{description}</span>
+        </div>
+      )}
       <div className="flex justify-between">
         <span className="text-gray-600">Job ID:</span>
         <span className="font-mono">{jobId}</span>
       </div>
       <div className="flex justify-between">
         <span className="text-gray-600">Created:</span>
-        <span suppressHydrationWarning>{new Date().toLocaleString()}</span>
+        <span suppressHydrationWarning>
+          {createdAt
+            ? new Date(createdAt).toLocaleString()
+            : new Date().toLocaleString()}
+        </span>
       </div>
       <div className="flex justify-between">
         <span className="text-gray-600">Status:</span>
@@ -151,30 +178,46 @@ const ResultsSection = () => (
 
 export default function JobDetailsPage({ params }: JobDetailsPageProps) {
   const { jobId } = use(params);
-  const [status, setStatus] = useState("processing");
-  const [progress, setProgress] = useState(0);
+  const searchParams = useSearchParams();
+
+  const name = searchParams.get("name") || "Job";
+  const description = searchParams.get("description") || "No description";
+  const initialStatus = searchParams.get("status") || "processing";
+  const initialProgress = parseInt(searchParams.get("progress") || "0");
+  const createdAt = searchParams.get("createdAt") || new Date().toISOString();
+
+  const [status, setStatus] = useState(initialStatus);
+  const [progress, setProgress] = useState(initialProgress);
 
   useEffect(() => {
-    // Simulate progress for now
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          setStatus("completed");
-          return 100;
-        }
-        return prev + 10;
-      });
-    }, 2000);
+    // Only simulate progress if not already completed/failed
+    if (initialStatus !== "completed" && initialStatus !== "failed") {
+      const interval = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 100) {
+            setStatus("completed");
+            return 100;
+          }
+          return prev + 10;
+        });
+      }, 2000);
 
-    return () => clearInterval(interval);
-  }, []);
+      return () => clearInterval(interval);
+    }
+  }, [initialStatus]);
 
   return (
     <div className="container mx-auto max-w-6xl py-12">
       <BreadcrumbSection jobId={jobId} />
-      <JobHeader jobId={jobId} />
+      <JobHeader jobId={jobId} name={name} />
       <StatusCard status={status} progress={progress} />
-      <JobInfoCard jobId={jobId} status={status} />
+      <JobInfoCard
+        jobId={jobId}
+        status={status}
+        name={name}
+        description={description}
+        createdAt={createdAt}
+      />
       <ActionsSection />
       {status === "completed" && <ResultsSection />}
     </div>

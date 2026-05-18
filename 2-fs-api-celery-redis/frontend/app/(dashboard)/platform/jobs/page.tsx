@@ -8,6 +8,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -151,56 +152,67 @@ interface CompletedJobsTableProps {
   jobs: Job[];
 }
 
-const CompletedJobsTable = ({ jobs }: CompletedJobsTableProps) => (
-  <div>
-    <h2 className="mb-4 text-2xl font-bold">History</h2>
-    <div className="rounded-lg border border-gray-200">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Created</TableHead>
-            <TableHead className="text-right">ID</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {jobs.map((job) => (
-            <TableRow
-              key={job.id}
-              className="cursor-pointer hover:bg-gray-50"
-              onClick={() => {
-                window.location.href = `/platform/jobs/${job.id}`;
-              }}
-            >
-              <TableCell className="font-medium">{job.name}</TableCell>
-              <TableCell className="text-sm text-gray-600">
-                {job.description}
-              </TableCell>
-              <TableCell>
-                <span
-                  className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${getStatusColor(job.status)}`}
-                >
-                  {getStatusIcon(job.status)} {job.status}
-                </span>
-              </TableCell>
-              <TableCell
-                className="text-sm text-gray-500"
-                suppressHydrationWarning
-              >
-                {new Date(job.createdAt).toLocaleString()}
-              </TableCell>
-              <TableCell className="text-right font-mono text-xs text-gray-500">
-                {job.id}
-              </TableCell>
+const CompletedJobsTable = ({ jobs }: CompletedJobsTableProps) => {
+  const router = useRouter();
+
+  return (
+    <div>
+      <h2 className="mb-4 text-2xl font-bold">History</h2>
+      <div className="rounded-lg border border-gray-200">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Created</TableHead>
+              <TableHead className="text-right">ID</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {jobs.map((job) => (
+              <TableRow
+                key={job.id}
+                className="cursor-pointer hover:bg-gray-50"
+                onClick={() => {
+                  const params = new URLSearchParams({
+                    name: job.name,
+                    description: job.description,
+                    status: job.status,
+                    progress: String(job.progress),
+                    createdAt: job.createdAt,
+                  });
+                  router.push(`/platform/jobs/${job.id}?${params.toString()}`);
+                }}
+              >
+                <TableCell className="font-medium">{job.name}</TableCell>
+                <TableCell className="text-sm text-gray-600">
+                  {job.description}
+                </TableCell>
+                <TableCell>
+                  <span
+                    className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${getStatusColor(job.status)}`}
+                  >
+                    {getStatusIcon(job.status)} {job.status}
+                  </span>
+                </TableCell>
+                <TableCell
+                  className="text-sm text-gray-500"
+                  suppressHydrationWarning
+                >
+                  {new Date(job.createdAt).toLocaleString()}
+                </TableCell>
+                <TableCell className="text-right font-mono text-xs text-gray-500">
+                  {job.id}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const JobsEmptyState = () => (
   <div className="rounded-lg border border-dashed border-gray-300 p-12 text-center">

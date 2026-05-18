@@ -1,6 +1,9 @@
 import uuid
+from datetime import datetime
+from enum import Enum
+from typing import List, Optional
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/api", tags=["setup"])
@@ -19,6 +22,89 @@ class SetupResponse(BaseModel):
     status: str
     message: str
     job_id: str
+
+
+# Job models
+class JobStatus(str, Enum):
+    PENDING = "pending"
+    PROCESSING = "processing"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
+class SetupConfig(BaseModel):
+    """Setup configuration for a job"""
+
+    modelVersion: str
+    apiToken: str
+    testingEndpointUrl: str
+
+
+class JobResponse(BaseModel):
+    id: str
+    name: str
+    description: str
+    status: JobStatus
+    createdAt: str
+    progress: int
+    setup: SetupConfig
+
+
+# Mock data - Replace with real DB queries later
+JOBS = [
+    {
+        "id": "job_abc12345",
+        "name": "Setup Validation",
+        "description": "Validating setup configuration",
+        "status": "completed",
+        "createdAt": "2026-05-18T10:30:00Z",
+        "progress": 100,
+        "setup": {
+            "modelVersion": "gpt-4",
+            "apiToken": "sk-abc123***",
+            "testingEndpointUrl": "https://api.openai.com/v1",
+        },
+    },
+    {
+        "id": "job_def67890",
+        "name": "Data Processing",
+        "description": "Processing evaluation data",
+        "status": "processing",
+        "createdAt": "2026-05-18T11:00:00Z",
+        "progress": 45,
+        "setup": {
+            "modelVersion": "gpt-3.5-turbo",
+            "apiToken": "sk-def456***",
+            "testingEndpointUrl": "https://api.openai.com/v1",
+        },
+    },
+    {
+        "id": "job_ghi11111",
+        "name": "Initial Setup",
+        "description": "First setup attempt",
+        "status": "failed",
+        "createdAt": "2026-05-18T09:00:00Z",
+        "progress": 0,
+        "setup": {
+            "modelVersion": "claude-3",
+            "apiToken": "sk-ghi789***",
+            "testingEndpointUrl": "https://api.anthropic.com/v1",
+        },
+    },
+    {
+        "id": "job_jkl22222",
+        "name": "Model Evaluation",
+        "description": "Evaluating model performance",
+        "status": "pending",
+        "createdAt": "2026-05-18T11:30:00Z",
+        "progress": 0,
+        "setup": {
+            "modelVersion": "gpt-4-turbo",
+            "apiToken": "sk-jkl012***",
+            "testingEndpointUrl": "https://api.openai.com/v1",
+        },
+    },
+]
 
 
 # Endpoints
@@ -40,7 +126,24 @@ async def create_setup(data: SetupRequest):
     print(f"   API Token: {data.apiToken}")
     print(f"   Testing Endpoint URL: {data.testingEndpointUrl}")
 
-    # For now, just echo back
+    # Create new job with setup details
+    new_job = {
+        "id": job_id,
+        "name": data.name,
+        "description": data.description,
+        "status": "pending",
+        "createdAt": datetime.utcnow().isoformat() + "Z",
+        "progress": 0,
+        "setup": {
+            "modelVersion": data.modelVersion,
+            "apiToken": data.apiToken,
+            "testingEndpointUrl": data.testingEndpointUrl,
+        },
+    }
+
+    # Add to jobs list
+    JOBS.append(new_job)
+
     return SetupResponse(
         status="ok",
         message=f"Setup '{data.name}' received!",
@@ -52,3 +155,33 @@ async def create_setup(data: SetupRequest):
 async def health():
     """Health check"""
     return {"status": "healthy"}
+
+
+# Jobs endpoints
+@router.get("/jobs", response_model=List[JobResponse])
+async def get_jobs(status: Optional[str] = Query(None)):
+    """
+    Get all jobs, optionally filtered by status
+
+    Query params:
+    - status: Filter by job status (pending, processing, completed, failed)
+    """
+    jobs = JOBS
+    if status:
+        jobs = [j for j in jobs if j["status"] == status]
+    return jobs
+
+
+@router.get("/jobs/completed", response_model=List[JobResponse])
+async def get_completed_jobs():
+    """Get completed and failed jobs (for history view)"""
+    return [j for j in JOBS if j["status"] in ["completed", "failed"]]
+
+
+@router.get("/jobs/{job_id}", response_model=JobResponse)
+async def get_job(job_id: str):
+    """Get a specific job by ID"""
+    for job in JOBS:
+        if job["id"] == job_id:
+            return job
+    return {"error": "Job not found"}

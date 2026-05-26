@@ -61,7 +61,7 @@ class JobResponse(BaseModel):
 # Mock data - Replace with real DB queries later
 JOBS = [
     {
-        "id": "job_abc12345",
+        "id": "6bef135d-4b80-4a05-a59d",
         "name": "Setup Validation",
         "description": "Validating setup configuration",
         "status": "completed",
@@ -78,7 +78,7 @@ JOBS = [
         },
     },
     {
-        "id": "job_def67890",
+        "id": "e7aadf0f-d206-44ff-abe7",
         "name": "Data Processing",
         "description": "Processing evaluation data",
         "status": "processing",
@@ -95,7 +95,7 @@ JOBS = [
         },
     },
     {
-        "id": "job_ghi11111",
+        "id": "3941dbe6-9c7a-4cf5-941a",
         "name": "Initial Setup",
         "description": "First setup attempt",
         "status": "failed",
@@ -108,11 +108,11 @@ JOBS = [
             "testRatio": "large",
             "judges": ["laaj", "moonshot", "aidx"],
             "pillars": ["Transparency", "Explainability", "Safety", "Fairness"],
-            "tags": [],
+            "tags": ["high-priority"],
         },
     },
     {
-        "id": "job_jkl22222",
+        "id": "34604f11-401e-4a84-aa7c",
         "name": "Model Evaluation",
         "description": "Evaluating model performance",
         "status": "pending",

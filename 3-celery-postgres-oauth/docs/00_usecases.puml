@@ -1,0 +1,23 @@
+@startuml Authentication Domain Use Cases
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Anonymous / Authenticated User" as user
+actor "Third-Party Identity Provider\n(Google/GitHub)" as oauth_provider
+
+rectangle "Auth Bounded Context Context" {
+    usecase "UC-01A-Sign Up\n(Register Credentials)" as UC_signup
+    usecase "UC-02A-Log In with Password\n(Standard Credentials)" as UC_login_pass
+    usecase "UC-03A-Log In via OAuth\n(External Identity Handshake)" as UC_login_oauth
+    usecase "UC-04A-Rotate Session Tokens\n(Silent Refresh)" as UC_refresh
+    usecase "UC-05A-Revoke Session\n(Secure Logout)" as UC_logout
+}
+
+user --> UC_signup
+user --> UC_login_pass
+user --> UC_login_oauth
+user --> UC_refresh
+user --> UC_logout
+
+UC_login_oauth --> oauth_provider
+@enduml

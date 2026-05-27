@@ -1,3 +1,5 @@
+from app.domain.auth.services import AuthService
+from app.logging_config import logger
 from fastapi import APIRouter, status
 from pydantic import BaseModel, EmailStr, Field
 
@@ -22,10 +24,16 @@ class UserResponseEnvelope(BaseModel):
     summary="UC-01A: Register New Local User Credentials",
 )
 async def signup(payload: UserSignupRequest) -> dict:
-    mock_aggregate = {
-        "id": 999,
-        "email": payload.email,
-        "is_active": True,
-    }
+    # inside signup handler, after payload validated
+    logger.info("signup_attempt", email=payload.email, endpoint="/auth/signup")
 
-    return mock_aggregate
+    auth_service = AuthService()
+
+    registered_user = await auth_service.register_new_user(
+        email=payload.email, password=payload.password
+    )
+    # on success
+    logger.info(
+        "signup_success", email=registered_user["email"], user_id=registered_user["id"]
+    )
+    return registered_user
